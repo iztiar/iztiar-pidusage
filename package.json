@@ -2,7 +2,7 @@
   "name": "@iztiar/iztiar-pidusage",
   "version": "0.1.0",
   "type": "module",
-  "description": "Add a pidUsage interface to every forked feature",
+  "description": "Add a pidUsage object to the status of forked services",
   "keywords": [
     "iztiar",
     "iztiar-plugin",
@@ -17,15 +17,17 @@
   "author": "Pierre Wieser <iztiar-leader@trychlos.org> (https://github.com/orgs/iztiar/people/iztiar-0)",
   "contributors": [],
   "funding": [],
-  "main": "./src/index.js",
+  "main": "./src/main.js",
   "exports": {
-    ".": "./src/index.js"
+    ".": "./src/main.js"
   },
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/iztiar/iztiar-pidusage.git"
   },
-  "dependencies": {},
+  "dependencies": {
+    "pidusage": "^3.0.0"
+  },
   "peerDependencies": {},
   "devDependencies": {},
   "scripts": {
