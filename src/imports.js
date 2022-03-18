@@ -1,4 +1,4 @@
 /*
  * imports.js
  */
-export * from './rest.class.js';
+export * from './plugin.class.js';

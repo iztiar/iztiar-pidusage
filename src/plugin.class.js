@@ -1,8 +1,11 @@
 /*
- * Rest class
+ * Plugin class
+ *
+ *  Add a feature (pidUsage) to a feature (own-process feature)
  */
+import pidUsage from 'pidusage';
 
-export class Rest {
+export class pidUsagePlugin {
 
     /**
      * @param {engineApi} api the engine API as described in engine-api.schema.json
@@ -14,8 +17,7 @@ export class Rest {
         const Interface = exports.Interface;
         const Msg = exports.Msg;
 
-        //Interface.extends( this, exports.baseService, api, card );
-        Msg.debug( 'pidUsagePlug instanciation' );
+        Msg.debug( 'pidUsagePlugin instanciation' );
 
         // first interface to be added, so that other interfaces may take advantage of that
         Interface.add( this, exports.ICapability );
@@ -45,7 +47,7 @@ export class Rest {
      */
     _filledConfig(){
         const exports = this.api().exports();
-        exports.Msg.debug( 'pidUsagePlug.filledConfig()' );
+        exports.Msg.debug( 'pidUsagePlugin.filledConfig()' );
         let _config = this.feature().config();
         let _filled = { ..._config };
         return _filled;
@@ -64,7 +66,7 @@ export class Rest {
                 ctime: res.ctime,
                 elapsed: res.elapsed
             };
-            exports.Msg.debug( 'pidUsagePlug._pidUsage()', o );
+            exports.Msg.debug( 'pidUsagePlugin._pidUsage()', o );
             return Promise.resolve( o );
         });
     }
@@ -75,7 +77,7 @@ export class Rest {
      */
     iserviceableConfig(){
         const c = this.config();
-        this.api().exports().Msg.debug( 'pidUsagePlug.iserviceableConfig()', c );
+        this.api().exports().Msg.debug( 'pidUsagePlugin.iserviceableConfig()', c );
         return c;
     }
 }
