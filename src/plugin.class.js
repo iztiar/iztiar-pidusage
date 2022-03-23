@@ -1,83 +1,100 @@
 /*
  * Plugin class
  *
- *  Add a feature (pidUsage) to a feature (own-process feature)
+ *  Add a pidUsage object to a feature of type 'service', available via the IStatus interface
  */
 import pidUsage from 'pidusage';
 
 export class pidUsagePlugin {
 
+    // the hosting instance
+    _instance = null;
+
     /**
      * @param {engineApi} api the engine API as described in engine-api.schema.json
      * @param {featureCard} card a description of this feature
+     * @param {Object} instance the implementation instance
      * @returns {Promise} which resolves to a pidUsagePlug instance
      */
-    constructor( api, card ){
+    constructor( api, card, instance ){
         const exports = api.exports();
         const Interface = exports.Interface;
         const Msg = exports.Msg;
 
         Msg.debug( 'pidUsagePlugin instanciation' );
+        this._instance = instance;
 
-        // first interface to be added, so that other interfaces may take advantage of that
-        Interface.add( this, exports.ICapability );
+        // must implement the IFeatureProvider
+        //  should implement that first so that we can install the engineApi and the featureCard as soon as possible
+        Interface.add( this, exports.IFeatureProvider );
+        this.IFeatureProvider.api( api );
+        this.IFeatureProvider.feature( card );
 
-        this.ICapability.add(
-            'pidUsage', ( o ) => { return o._pidUsage(); }
-        );
+        // if not already done, make sure the implementation instance implements a IStatus interface and define a new status part
+        const IStatus = exports.IStatus;
+        if( !instance.IStatus ){
+            Interface.add( instance, IStatus );
+        }
+        instance.IStatus.add( this._statusPart, [ this ]);
 
-        // this is mandatory
-        Interface.add( this, exports.IServiceable, {
-            class: this._class,
-            config: this.iserviceableConfig
-        });
+        // same for ICapability
+        const ICapability = exports.ICapability;
+        if( !instance.ICapability ){
+            Interface.add( instance, ICapability );
+        }
+        instance.ICapability.add( 'pidUsage', this.pidUsage );
 
-        return Promise.resolve( true )
-            .then(() => { return this._filledConfig(); })
-            .then(( o ) => { return this.config( o ); })
+        let _promise = this._fillConfig()
             .then(() => { return Promise.resolve( this ); });
-    }
 
-    _class(){
-        return this.constructor.name;
+        return _promise;
     }
 
     /*
-     * @returns {Object} the filled configuration for the service
+     * @returns {Promise} which resolves to the filled configuration for the service
      */
-    _filledConfig(){
-        const exports = this.api().exports();
-        exports.Msg.debug( 'pidUsagePlugin.filledConfig()' );
-        let _config = this.feature().config();
-        let _filled = { ..._config };
-        return _filled;
+    _fillConfig(){
+        if( !this.IFeatureProvider ){
+            throw new Error( 'IFeatureProvider is expected to have been instanciated before calling this function' );
+        }
+        const exports = this.IFeatureProvider.api().exports();
+        exports.Msg.debug( 'pidUsagePlugin.fillConfig()' );
+        const feature = this.IFeatureProvider.feature();
+        let _filled = { ...feature.config() };
+        return this.IFeatureProvider.fillConfig( _filled ).then(( c ) => { return feature.config( c ); });
+    }
+
+    // @param {Object} instance the implementation instance
+    // @param {pidUsagePlugin} self this instance
+    // @returns {Promise} which resolves to the PID usage
+    _statusPart( instance, self ){
+        const exports = instance.IFeatureProvider.api().exports();
+        exports.Msg.debug( 'pidUsagePlugin.statusPart()', self.IFeatureProvider.feature().name());
+        return self.pidUsage( instance, 'cap', self )
+            .then(( res ) => {
+                const name = self.IFeatureProvider.feature().name().split( '/' )[1];
+                let o = {};
+                o[name] = res;
+                //exports.Msg.debug( 'pidUsagePlugin.statusPart()', 'pidUsage', o );
+                return Promise.resolve( o );
+            });
     }
 
     /*
      * @returns {Promise} which must resolve to an object conform to check-status.schema.json
      */
-    _pidUsage(){
-        const exports = this.api().exports();
+    pidUsage( instance, cap ){
+        const exports = instance.IFeatureProvider.api().exports();
         return pidUsage( process.pid )
-        .then(( res ) => {
-            const o = {
-                cpu: res.cpu,
-                memory: res.memory,
-                ctime: res.ctime,
-                elapsed: res.elapsed
-            };
-            exports.Msg.debug( 'pidUsagePlugin._pidUsage()', o );
-            return Promise.resolve( o );
-        });
-    }
-
-    /*
-     * @returns {Object} the filled configuration for the feature
-     * [-implementation Api-]
-     */
-    iserviceableConfig(){
-        const c = this.config();
-        this.api().exports().Msg.debug( 'pidUsagePlugin.iserviceableConfig()', c );
-        return c;
+            .then(( res ) => {
+                const o = {
+                    cpu: res.cpu,
+                    memory: res.memory,
+                    ctime: res.ctime,
+                    elapsed: res.elapsed
+                };
+                exports.Msg.debug( 'pidUsagePlugin.pidUsage()', o );
+                return Promise.resolve( o );
+            });
     }
 }
