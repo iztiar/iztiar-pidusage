@@ -1,7 +1,9 @@
 /*
  * Plugin class
  *
- *  Add a pidUsage object to a feature of type 'service', available via the IStatus interface
+ *  Add a pidUsage object to a feature of type 'service':
+ *  - available via the IStatus interface
+ *  - also available as a ICapability
  */
 import pidUsage from 'pidusage';
 
@@ -31,11 +33,7 @@ export class pidUsagePlugin {
         this.IFeatureProvider.feature( card );
 
         // if not already done, make sure the implementation instance implements a IStatus interface and define a new status part
-        const IStatus = exports.IStatus;
-        if( !instance.IStatus ){
-            Interface.add( instance, IStatus );
-        }
-        instance.IStatus.add( this._statusPart, [ this ]);
+        exports.IStatus.add( instance, this.statusPart, this );
 
         // same for ICapability
         const ICapability = exports.ICapability;
@@ -67,7 +65,7 @@ export class pidUsagePlugin {
     // @param {Object} instance the implementation instance
     // @param {pidUsagePlugin} self this instance
     // @returns {Promise} which resolves to the PID usage
-    _statusPart( instance, self ){
+    statusPart( instance, self ){
         const exports = instance.IFeatureProvider.api().exports();
         exports.Msg.debug( 'pidUsagePlugin.statusPart()', self.IFeatureProvider.feature().name());
         return self.pidUsage( instance, 'cap', self )
