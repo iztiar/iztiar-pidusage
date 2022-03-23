@@ -32,15 +32,10 @@ export class pidUsagePlugin {
         this.IFeatureProvider.api( api );
         this.IFeatureProvider.feature( card );
 
-        // if not already done, make sure the implementation instance implements a IStatus interface and define a new status part
+        // add a status part
         exports.IStatus.add( instance, this.statusPart, this );
-
-        // same for ICapability
-        const ICapability = exports.ICapability;
-        if( !instance.ICapability ){
-            Interface.add( instance, ICapability );
-        }
-        instance.ICapability.add( 'pidUsage', this.pidUsage );
+        // add a capability
+        exports.ICapability.add( instance, 'pidUsage', this.pidUsage );
 
         let _promise = this._fillConfig()
             .then(() => { return Promise.resolve( this ); });
