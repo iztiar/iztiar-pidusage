@@ -29,7 +29,7 @@ export class pidUsagePlugin {
         // must implement the IFeatureProvider
         //  should implement that first so that we can install the engineApi and the featureCard as soon as possible
         Interface.add( this, exports.IFeatureProvider, {
-            vFeatureInitialized: this.ifeatureproviderFeatureInitialized
+            v_featureInitialized: this.ifeatureproviderFeatureInitialized
         });
         this.IFeatureProvider.api( api );
         this.IFeatureProvider.feature( card );
